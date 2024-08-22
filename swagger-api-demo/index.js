@@ -384,7 +384,7 @@ app.delete('/items/:id',authenticateToken, (req, res) => {
     const deleteStudent = students.splice(studentIndex, 1);
     res.status(200).json({message: `Estudiante con ID:${id} eliminado`, student: deleteStudent[0]}); 
   }else{
-    res.status(404).json({message: `No se encontró el estudiante con ID: ${id}`})
+    res.status(404).json({message: `No se encontró el estudiante con ID:${id}`})
   }
 });
 
