@@ -1,20 +1,73 @@
 // index.js
 const express = require('express');
 const setupSwagger = require('./swagger');
+const jwt = require('jsonwebtoken');
+const authenticateToken = require('./auth.js')
 
 const app = express();
 app.use(express.json());
+const users = [
+  {
+    id: 1,
+    username: 'Admin',
+    password: '1234'
+  },
+  {
+    id: 2,
+    username: 'Admin2',
+    password: '12345'
+  },
+  {
+    id: 3,
+    username: 'Admin3',
+    password: '123456'
+  }
+]
+
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Login and get a JWT token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: JWT token returned
+ */
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+  const user = users.find(u => u.username === username && u.password === password);
+ 
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
+ 
+  const token = jwt.sign({ username: user.username }, 'your_secret_key', { expiresIn: '1h' });
+  res.json({ token });
+});
 
 /**
  * @swagger
  * /items:
  *   get:
  *     summary: Retrieve a list of items
+ *     security: 
+ *        - bearerAuth: []
  *     responses:
  *       200:
  *         description: A list of items
  */
-app.get('/items', (req, res) => {
+app.get('/items', authenticateToken, (req, res) => {
   res.status(200).json({ message: 'GET request - Retrieve items' });
 });
 
@@ -23,11 +76,13 @@ app.get('/items', (req, res) => {
  * /items:
  *   post:
  *     summary: Create a new item
+ *     security: 
+ *        - bearerAuth: []
  *     responses:
  *       201:
  *         description: Item created successfully
  */
-app.post('/items', (req, res) => {
+app.post('/items', authenticateToken, (req, res) => {
   res.status(201).json({ message: 'POST request - Create item' });
 });
 
@@ -36,6 +91,8 @@ app.post('/items', (req, res) => {
  * /items/{id}:
  *   get:
  *     summary: Retrieve a single item by ID
+ *     security: 
+ *        - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -47,7 +104,7 @@ app.post('/items', (req, res) => {
  *       200:
  *         description: A single item
  */
-app.get('/items/:id', (req, res) => {
+app.get('/items/:id',authenticateToken, (req, res) => {
   res.status(200).json({ message: `GET request - Retrieve item with ID ${req.params.id}` });
 });
 
@@ -56,6 +113,8 @@ app.get('/items/:id', (req, res) => {
  * /items/{id}:
  *   put:
  *     summary: Update an item by ID
+ *     security: 
+ *        - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -67,7 +126,7 @@ app.get('/items/:id', (req, res) => {
  *       200:
  *         description: Item updated successfully
  */
-app.put('/items/:id', (req, res) => {
+app.put('/items/:id',authenticateToken, (req, res) => {
   res.status(200).json({ message: `PUT request - Update item with ID ${req.params.id}` });
 });
 
@@ -76,6 +135,8 @@ app.put('/items/:id', (req, res) => {
  * /items/{id}:
  *   delete:
  *     summary: Delete an item by ID
+ *     security: 
+ *        - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -87,7 +148,7 @@ app.put('/items/:id', (req, res) => {
  *       200:
  *         description: Item deleted successfully
  */
-app.delete('/items/:id', (req, res) => {
+app.delete('/items/:id',authenticateToken, (req, res) => {
   res.status(200).json({ message: `DELETE request - Delete item with ID ${req.params.id}` });
 });
 
